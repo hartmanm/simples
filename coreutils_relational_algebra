@@ -1,0 +1,31 @@
+Split files by empty lines:
+csplit —suppress-matched input.txt ‘/^$/‘ ‘{*}’
+will output to x number of files 
+
+On a line by line basis / will not work on fields:
+
+union of files (with sorting)
+sort -u <>  <> ...
+
+Intersection of files (with sorting)
+sort <>  <> ... | uniq -d
+
+Difference of files (with sorting)
+sort  <>  <> ... | uniq
+
+Symmetric Difference of files (with sorting)
+sort <>  <> ... | uniq -u
+
+When files already sorted:
+
+union of files (no sorting)
+join -t ‘’ -a1-a2 <>  <> ...
+
+Intersection of files (no sorting)
+join -t ‘’ <>  <> ...
+
+Difference of files (no sorting)
+join -t ‘’ -v2 <>  <> ...
+
+Symmetric Difference of files (no sorting)
+join -t ‘’ -v1 -v2 <>  <> ...
