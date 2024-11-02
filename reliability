@@ -1,5 +1,0 @@
-If we build systems on systems, we rely on each system.
-To trust our systems, must build them upon systems that are known to us.
-To be reliable is not to avoid all errors, but to detect, identify, and recover from them.
-A system that cannot, under some conditions; modify itself : cannot be reliable.
-A isolated system cannot recover from errors as a complex network of systems can.
