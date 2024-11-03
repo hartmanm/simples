@@ -1,0 +1,276 @@
+<!--
+Copyright (c) 2022 Michael Neill Hartman. All rights reserved.
+mnh_license@proton.me
+https://github.com/hartmanm
+-->
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Force-Directed Lattice</title>
+
+<body>
+
+<script src="d3_v7_4_4.js"></script>
+ 
+<script>
+
+
+function _replay(html){return(
+html`<button>Replay`
+)}
+
+function _chart(replay,data,d3,DOM,width,height,drag)
+{
+  replay;
+
+  const links = data.links.map(d => Object.create(d));
+  const nodes = data.nodes.map(d => Object.create(d));
+
+  const simulation = d3.forceSimulation(nodes)
+      .force("charge", d3.forceManyBody().strength(-30))
+      .force("link", d3.forceLink(links).strength(1).distance(20).iterations(10))
+      .on("tick", ticked);
+
+
+
+  const context = DOM.context2d(width, height);
+
+  function ticked() {
+    context.clearRect(0, 0, width, height);
+    context.save();
+    context.translate(width / 2, height / 2);
+    context.beginPath();
+    for (const d of links) {
+      context.moveTo(d.source.x, d.source.y);
+      context.lineTo(d.target.x, d.target.y);
+    }
+    context.strokeStyle = "#aaa";
+    context.stroke();
+    context.beginPath();
+    for (const d of nodes) {
+      context.moveTo(d.x + 3, d.y);
+      context.arc(d.x, d.y, 3, 0, 2 * Math.PI);
+    }
+    context.fill();
+    context.strokeStyle = "#fff";
+    context.stroke();
+    context.restore();
+  }
+
+  return d3.select(context.canvas)
+      .call(drag(simulation)
+      .subject(({x, y}) => simulation.find(x - width / 2, y - height / 2)))
+    .node();
+}
+
+
+function _drag(d3){return(
+simulation => {
+  
+  function dragstarted(event) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    event.subject.fx = event.subject.x;
+    event.subject.fy = event.subject.y;
+  }
+  
+  function dragged(event) {
+    event.subject.fx = event.x;
+    event.subject.fy = event.y;
+  }
+  
+  function dragended(event) {
+    if (!event.active) simulation.alphaTarget(0);
+    event.subject.fx = null;
+    event.subject.fy = null;
+  }
+  
+  return d3.drag()
+      .on("start", dragstarted)
+      .on("drag", dragged)
+      .on("end", dragended);
+}
+)}
+
+function _data()
+{
+  const n = 20;
+  const nodes = Array.from({length: n * n}, (_, i) => ({index: i}));
+  const links = [];
+  for (let y = 0; y < n; ++y) {
+    for (let x = 0; x < n; ++x) {
+      if (y > 0) links.push({source: (y - 1) * n + x, target: y * n + x});
+      if (x > 0) links.push({source: y * n + (x - 1), target: y * n + x});
+    }
+  }
+  return {nodes, links};
+}
+
+
+function _height(width){return(
+width
+)}
+
+
+// (40,500) (10,250) (6,50)(3,25)(1.75,15)  
+// final_size_scale [40,10,6,3,1.75][500,250,50,25,15]
+function make_svg(size,duration,final_size_scale){
+  let offset=size/2;
+  let initial_size=size*1.75;
+  let final_size=initial_size*final_size_scale;
+  let initial_stroke_width=size/25;
+  let final_stroke_width=initial_stroke_width*2;
+var svg =d3.select("body")
+.append("svg")
+.attr("width", size)     // make it 960 pixels wide
+.attr("height", size)    // make it 500 pixels high
+    .append("path")
+    .attr("d", d3.symbol().type(d3.symbolTriangle).size(initial_size))
+    .attr("stroke", "green")
+    .attr("stroke-width",initial_stroke_width+"px")
+    .attr("transform", "translate("+offset+","+offset+")")
+    .transition()           // apply a transition
+    .duration(duration)         // apply it over 4000 milliseconds
+    .attr('d', d3.symbol().type(d3.symbolSquare).size(final_size)) 
+    //.style("fill", "purple")
+    .attr("stroke", "purple")
+    .attr("stroke-width",final_stroke_width+"px")
+    .transition()           // apply a transition
+    .duration(duration)         // apply it over 4000 milliseconds
+    .attr('d', d3.symbol().type(d3.symbolTriangle).size(final_size)) 
+    .style("fill", "black")
+    .transition()           // apply a transition
+    .duration(duration)         // apply it over 4000 milliseconds
+    .attr('d', d3.symbol().type(d3.symbolDiamond).size(final_size)) 
+    .transition()           // apply a transition
+    .duration(duration)         // apply it over 4000 milliseconds
+    .attr("stroke", "green")
+    .attr("stroke-width",final_stroke_width+"px")
+};
+
+function many_svg(number){
+
+function a(){make_svg(15,4000,1.75);};
+function b(){make_svg(250,4000,10);};
+function c(){make_svg(25,4000,3);};
+//function d(){make_svg(50,4000,6);};
+function d(){make_svg(30,4000,4);};
+
+for (i=0;i<number;i++){
+  j=i-1;
+  //make_svg(15,4000);
+  // (40,500) (10,250) (6,50)(3,25)(1.75,15)
+  //make_svg(500,4000,40);
+  if(i%2==0||j%2==0){a();}
+  //if(i%10==0){b();}
+  if(i%5==0||j%5==0){c();}
+  if(i%3==0||j%3==0){d();}
+}
+
+};
+
+many_svg(1000);
+//make_svg(offset, size);
+
+
+/*
+    var svg2 =d3.select("body")
+    .append("svg")
+.attr("width", 600)     // make it 960 pixels wide
+.attr("height", 600)    // make it 500 pixels high
+    .append("path")
+    .attr("d", d3.symbol().type(d3.symbolTriangle).size(1000))
+    .attr("stroke", "green")
+    .attr("stroke-width", "10px")
+    .attr("transform", "translate(250,250)")
+
+     
+    .transition()           // apply a transition
+    .duration(8000)         // apply it over 4000 milliseconds
+    .attr('d', d3.symbol().type(d3.symbolSquare).size(10000)) 
+    //.style("fill", "purple")
+    .attr("stroke", "purple")
+    .attr("stroke-width", "20px")
+
+    .transition()           // apply a transition
+    .duration(8000)         // apply it over 4000 milliseconds
+    .attr('d', d3.symbol().type(d3.symbolTriangle).size(10000)) 
+    .style("fill", "black")
+    .transition()           // apply a transition
+    .duration(8000)         // apply it over 4000 milliseconds
+    .attr('d', d3.symbol().type(d3.symbolDiamond).size(10000)) 
+
+    .transition()           // apply a transition
+    .duration(8000)         // apply it over 4000 milliseconds
+    .attr("stroke", "green")
+    .attr("stroke-width", "20px")
+
+*/
+
+
+
+    /*
+var tri = d3.symbol().type(d3.symbolTriangle).size(200);
+
+var svg = d3.select("body") // Select the body element
+    .append("svg")          // Append an SVG element to the body
+    //.symbol().type(d3.symbolTriangle).size(200)
+    .append("tri")
+    .attr("fill", "none")
+                .attr("stroke", "green")
+                .attr("stroke-width", "5px")
+                .attr("transform", "translate(50, 50)");
+
+
+var tri = d3.symbol().type(d3.symbolTriangle).size(200);
+
+var svg = d3.select("body").append(d3.symbol().type(d3.symbolTriangle).size(200))
+
+        .attr("width", window.innerWidth)
+    .attr("height", window.innerHeight)
+    .append('path')
+    .attr("d", d3.svg.symbol().type("triangle-up").size(500))
+    .attr("transform", function(d) { return "translate(" + 100 + "," + 100 + ")"; })
+    .style("fill", "red");
+
+//_chart("replay","data","d3","DOM",50,50,"drag");
+var svg2 = d3.select("body") // Select the body element
+    .append("svg2")          // Append an SVG element to the body
+           // symbolTriangle 
+           var sym = 
+d3.symbol().type(d3.symbolTriangle).size(500);
+            d3.select("#svg2")
+                .append("path")
+                .attr("d", sym)
+                .attr("fill", "none")
+                .attr("stroke", "green")
+                .attr("stroke-width", "5px")
+                .attr("transform", "translate(50, 50)");
+
+var svg = d3.select("body") // Select the body element
+    .append("svg")          // Append an SVG element to the body
+    .attr("width", 1000)     // make it 960 pixels wide
+    .attr("height", 200)    // make it 500 pixels high
+    .append("path")
+    //.append("circle")       // append a circle to the svg
+    //.style("fill", "blue")  // fill the circle with 'blue'
+    //.attr("r", 20)          // set the radius to 10 pixels
+    //.attr('cx', 40)         // position the circle at 40 on the x axis
+    //.attr('cy', 250)        // position the circle at 250 on the y axis
+    .attr("fill", "none")
+                .attr("stroke", "green")
+                .attr("stroke-width", "5px")
+      //          .attr("transform", "translate(50, 50)");
+
+    .transition()           // apply a transition
+    .duration(4000)         // apply it over 4000 milliseconds
+    .attr('cx', 850)        // new horizontal position at 850 on x axis
+    .attr('r', 40)          // new radius of 40 pixels
+    .style('fill', "red");  // new colour red
+ */
+
+</script>
+
+<div id="one"></div>
+<div id="two"></div>
+
+</body>
