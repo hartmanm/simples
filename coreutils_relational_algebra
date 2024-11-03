@@ -1,3 +1,7 @@
+# Copyright (c) 2019 Michael Neill Hartman. All rights reserved.
+# mnh_license@proton.me
+# https://github.com/hartmanm
+
 Split files by empty lines:
 csplit —suppress-matched input.txt ‘/^$/‘ ‘{*}’
 will output to x number of files 
